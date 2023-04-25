@@ -1,0 +1,12 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="4.5" y="11.5" width="31" height="32" fill="#EDEDED" stroke="#3C3C3C"/>
+<rect x="4" y="19" width="32" height="1" fill="#3C3C3C"/>
+<rect x="4" y="27" width="32" height="1" fill="#3C3C3C"/>
+<rect x="4" y="35" width="32" height="1" fill="#3C3C3C"/>
+<rect x="8" y="15" width="5" height="1" fill="#3C3C3C"/>
+<rect x="8" y="23" width="5" height="1" fill="#3C3C3C"/>
+<rect x="8" y="31" width="5" height="1" fill="#3C3C3C"/>
+<rect x="8" y="39" width="5" height="1" fill="#3C3C3C"/>
+<path d="M33 25.5C38.799 25.5 43.5 20.799 43.5 15C43.5 9.20101 38.799 4.5 33 4.5C27.201 4.5 22.5 9.20101 22.5 15C22.5 20.799 27.201 25.5 33 25.5Z" fill="#DECAE1" stroke="#3C3C3C" stroke-miterlimit="1.5" stroke-linecap="square"/>
+<path d="M37.5 11C37.5 10.7239 37.2761 10.5 37 10.5H32.5C32.2239 10.5 32 10.7239 32 11C32 11.2761 32.2239 11.5 32.5 11.5H36.5V15.5C36.5 15.7761 36.7239 16 37 16C37.2761 16 37.5 15.7761 37.5 15.5V11ZM29.3536 19.3536L37.3536 11.3536L36.6464 10.6464L28.6464 18.6464L29.3536 19.3536Z" fill="#3C3C3C"/>
+</svg>
