@@ -163,8 +163,6 @@ class PROISP_VCaching
             ), 0, 2);
             if ($get_action && $post_id && ($get_action == 'purge_post' || $get_action == 'purge_page') && check_admin_referer($this->plugin)) {
                 $this->purge_post($post_id);
-                //[28-May-2019] Removing $_SESSION usage
-                // $_SESSION['vcaching_note'] = $this->noticeMessage;
                 $referer = str_replace('proisp_purge_varnish_cache=1', '', wp_get_referer());
                 wp_redirect($referer . (strpos($referer, '?') ? '&' : '?') . 'vcaching_note=' . $get_action);
             }
