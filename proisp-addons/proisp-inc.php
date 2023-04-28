@@ -1,20 +1,19 @@
 <?php
 /* Copyright: group.one */
 
-if (!class_exists('OnecomExcludeCache')) {
-    require dirname(__FILE__) . '/inc/class-onecom-exclude-cache.php';
+if (!class_exists('PROISP_Exclude_Cache')) {
+    require dirname(__FILE__) . '/inc/class-proisp-exclude-cache.php';
 }
 
-final class OCVCaching extends VCachingOC
+final class PROISP_VCaching_Config extends PROISP_VCaching
 {
     const defaultTTL = 2592000; //1 month
     const defaultTTLUnit = 'days'; // in days
     const defaultEnable = 'true';
-    const defaultPrefix = 'varnish_caching_';
-    const pluginName = 'onecom-vcache';
-    const textDomain = 'vcaching';
+    const defaultPrefix = 'proisp_varnish_caching_';
+    const pluginName = 'proisp-vcache';
     const transient = '__onecom_allowed_package';
-    const getOCParam = 'purge_varnish_cache';
+    const getOCParam = 'proisp_purge_varnish_cache';
 
     const pluginVersion = '1.0.0';
     const ocRulesVersion = 1.2;
@@ -51,8 +50,7 @@ final class OCVCaching extends VCachingOC
          */
         add_action('admin_init', array($this, 'runAdminSettings'), 1);
 
-        add_action('admin_menu', array($this, 'remove_parent_page'), 100);
-        add_action('admin_menu', array($this, 'add_menu_item'));
+        add_action('admin_menu', array($this, 'proisp_add_menu_item'));
 
         add_action('admin_init', array($this, 'options_page_fields'));
         add_action('plugins_loaded', array($this, 'filter_purge_settings'), 1);
@@ -68,13 +66,13 @@ final class OCVCaching extends VCachingOC
 
 
         // remove purge requests from Oclick demo importer
-        add_filter('vcaching_events', array($this, 'vcaching_events_cb'));
+        add_filter('proisp_vcaching_events', array($this, 'proisp_vcaching_events_cb'));
         //intercept the list of urls, replace multiple urls with a single generic url
-        add_filter('vcaching_purge_urls', array($this, 'vcaching_purge_urls_cb'));
+        add_filter('proisp_vcaching_purge_urls', array($this, 'proisp_vcaching_purge_urls_cb'));
 
         register_activation_hook($this->VCPATH . DIRECTORY_SEPARATOR . 'vcaching.php', array($this, 'onActivatePlugin'));
         register_deactivation_hook($this->VCPATH . DIRECTORY_SEPARATOR . 'vcaching.php', array($this, 'onDeactivatePlugin'));
-        $exclude_cache = new OnecomExcludeCache();
+        $exclude_cache = new PROISP_Exclude_Cache();
 
     }
 
@@ -170,7 +168,7 @@ final class OCVCaching extends VCachingOC
 
         $screen = get_current_screen();
         $warnScreens = array(
-            'toplevel_page_onecom-vcache-plugin',
+            'toplevel_page_proisp-vcache-plugin',
             'plugins',
             'options-general',
             'dashboard',
@@ -190,7 +188,7 @@ final class OCVCaching extends VCachingOC
         );
 
         $dectLink = wp_nonce_url($dectLink, 'plugin-deactivation');
-        $message = __('To get the best out of One.com Performance Cache, kindly deactivate the existing "Varnish Caching" plugin.&nbsp;&nbsp;', 'vcaching');
+        $message = __('To get the best out of One.com Performance Cache, kindly deactivate the existing "Varnish Caching" plugin.&nbsp;&nbsp;', 'proisp-vcache');
         $message .= sprintf("<a href='%s' class='button'>%s</a>", ($dectLink), __('Deactivate'));
         printf('<div class="%1$s"><p>%2$s</p></div>', esc_attr($class), $message);
     }
@@ -298,22 +296,14 @@ final class OCVCaching extends VCachingOC
     }
 
     /**
-     * Remove current menu item
-     */
-    public function remove_parent_page()
-    {
-        remove_menu_page('vcaching-plugin');
-    }
-
-    /**
      * Add menu item
      */
-    public function add_menu_item()
+    public function proisp_add_menu_item()
     {
         if (parent::check_if_purgeable()) {
             global $onecom_generic_menu_position;
             $position = (function_exists('onecom_get_free_menu_position') && !empty($onecom_generic_menu_position)) ? onecom_get_free_menu_position($onecom_generic_menu_position) : null;
-            add_menu_page(__('Performance Cache', 'vcaching'), __('Performance Cache&nbsp;', 'vcaching'), 'manage_options', self::pluginName . '-plugin', array($this, 'settings_page'), 'dashicons-dashboard', $position);
+            add_menu_page(__('Performance Cache', 'proisp-vcache'), __('Performance Cache&nbsp;', 'proisp-vcache'), 'manage_options', self::pluginName . '-plugin', array($this, 'settings_page'), 'dashicons-dashboard', $position);
 
         }
     }
@@ -336,11 +326,12 @@ final class OCVCaching extends VCachingOC
      */
     public function options_page_fields()
     {
+        $option_page = isset($_POST['option_page']) ? sanitize_text_field($_POST['option_page']) : false;
         add_settings_section(self::defaultPrefix . 'oc_options', null, null, self::defaultPrefix . 'oc_options');
 
-        add_settings_field(self::defaultPrefix . "ttl", __("Cache TTL", 'vcaching') . '<span class="oc-tooltip"><span class="dashicons dashicons-editor-help"></span><span>' . __('The time that website data is stored in the Varnish cache. After the TTL expires the data will be updated, 0 means no caching.', 'vcaching') . '</span></span>', array($this, self::defaultPrefix . "ttl_callback"), self::defaultPrefix . 'oc_options', self::defaultPrefix . 'oc_options');
+        add_settings_field(self::defaultPrefix . "ttl", __("Cache TTL", 'proisp-vcache') . '<span class="oc-tooltip"><span class="dashicons dashicons-editor-help"></span><span>' . __('The time that website data is stored in the Varnish cache. After the TTL expires the data will be updated, 0 means no caching.', 'proisp-vcache') . '</span></span>', array($this, self::defaultPrefix . "ttl_callback"), self::defaultPrefix . 'oc_options', self::defaultPrefix . 'oc_options');
 
-        if (isset($_POST['option_page']) && $_POST['option_page'] == self::defaultPrefix . 'oc_options') {
+        if (isset($option_page) && $option_page == self::defaultPrefix . 'oc_options') {
             register_setting(self::defaultPrefix . 'oc_options', self::defaultPrefix . "enable");
             register_setting(self::defaultPrefix . 'oc_options', self::defaultPrefix . "ttl");
 
@@ -355,9 +346,7 @@ final class OCVCaching extends VCachingOC
     public function enqueue_resources($hook)
     {
         $pages = [
-            'toplevel_page_onecom-vcache-plugin',
-            '_page_onecom-cdn',
-            '_page_onecom-wp-rocket',
+            'toplevel_page_proisp-vcache-plugin'
         ];
         if (!in_array($hook, $pages)) {
             return;
@@ -393,7 +382,7 @@ final class OCVCaching extends VCachingOC
      * */
     function onecom_vcache_icon_css()
     {
-        echo "<style>.toplevel_page_onecom-vcache-plugin > .wp-menu-image{display:flex !important;align-items: center;justify-content: center;}.toplevel_page_onecom-vcache-plugin > .wp-menu-image:before{content:'';background-image:url('" . $this->OCVCURI . "/assets/images/performance-inactive-icon.svg');font-family: sans-serif !important;background-repeat: no-repeat;background-position: center center;background-size: 18px 18px;background-color:#fff;border-radius: 100px;padding:0 !important;width:18px;height: 18px;}.toplevel_page_onecom-vcache-plugin.current > .wp-menu-image:before{background-size: 16px 16px; background-image:url('" . $this->OCVCURI . "/assets/images/performance-active-icon.svg');}.ab-top-menu #wp-admin-bar-purge-all-varnish-cache .ab-icon:before,#wpadminbar>#wp-toolbar>#wp-admin-bar-root-default>#wp-admin-bar-onecom-wp .ab-item:before, .ab-top-menu #wp-admin-bar-onecom-staging .ab-item .ab-icon:before{top: 2px;}a.current.menu-top.toplevel_page_onecom-vcache-plugin.menu-top-last{word-spacing: 10px;}@media only screen and (max-width: 960px){.auto-fold #adminmenu a.menu-top.toplevel_page_onecom-vcache-plugin{height: 55px;}}</style>";
+        echo "<style>.toplevel_page_proisp-vcache-plugin > .wp-menu-image{display:flex !important;align-items: center;justify-content: center;}.toplevel_page_proisp-vcache-plugin > .wp-menu-image:before{content:'';background-image:url('" . $this->OCVCURI . "/assets/images/performance-inactive-icon.svg');font-family: sans-serif !important;background-repeat: no-repeat;background-position: center center;background-size: 18px 18px;background-color:#fff;border-radius: 100px;padding:0 !important;width:18px;height: 18px;}.toplevel_page_proisp-vcache-plugin.current > .wp-menu-image:before{background-size: 16px 16px; background-image:url('" . $this->OCVCURI . "/assets/images/performance-active-icon.svg');}.ab-top-menu #wp-admin-bar-proisp_purge-all-varnish-cache .ab-icon:before,#wpadminbar>#wp-toolbar>#wp-admin-bar-root-default>#wp-admin-bar-proisp-wp .ab-item:before, .ab-top-menu #wp-admin-bar-proisp-staging .ab-item .ab-icon:before{top: 2px;}a.current.menu-top.toplevel_page_proisp-vcache-plugin.menu-top-last{word-spacing: 10px;}@media only screen and (max-width: 960px){.auto-fold #adminmenu a.menu-top.toplevel_page_proisp-vcache-plugin{height: 55px;}}</style>";
         return;
     }
 
@@ -438,7 +427,7 @@ final class OCVCaching extends VCachingOC
         add_filter('ocvc_purge_url', array($this, 'ocvc_purge_url_callback'), 1, 3);
         add_filter('ocvc_purge_headers', array($this, 'ocvc_purge_headers_callback'), 1, 2);
         add_filter('ocvc_permalink_notice', array($this, 'ocvc_permalink_notice_callback'));
-        add_filter('vcaching_purge_urls', array($this, 'vcaching_purge_urls_callback'), 10, 2);
+        add_filter('proisp_vcaching_purge_urls', array($this, 'proisp_vcaching_purge_urls_callback'), 10, 2);
 
         add_action('admin_notices', array($this, 'oc_vc_notice'));
     }
@@ -455,8 +444,8 @@ final class OCVCaching extends VCachingOC
         $response = wp_remote_retrieve_body($response);
 
         $find = array(
-            '404 Key not found' => sprintf(__('It seems that %s is already purged. There is no resource in the cache to purge.', 'vcaching'), $url),
-            'Error 200 Purged' => sprintf(__('%s is purged successfully.', 'vcaching'), $url),
+            '404 Key not found' => sprintf(__('It seems that %s is already purged. There is no resource in the cache to purge.', 'proisp-vcache'), $url),
+            'Error 200 Purged' => sprintf(__('%s is purged successfully.', 'proisp-vcache'), $url),
         );
 
         foreach ($find as $key => $message) {
@@ -540,8 +529,8 @@ final class OCVCaching extends VCachingOC
         } else {
             $purgemethod = 'exact';
         }
-        $headers['X-VC-Purge-Host'] = $_SERVER['SERVER_NAME'];
-        $headers['host'] = $_SERVER['SERVER_NAME'];
+        $headers['X-VC-Purge-Host'] = sanitize_text_field($_SERVER['SERVER_NAME']);
+        $headers['host'] = sanitize_text_field($_SERVER['SERVER_NAME']);
         $headers['X-VC-Purge-Method'] = $purgemethod;
         return $headers;
     }
@@ -551,7 +540,7 @@ final class OCVCaching extends VCachingOC
      */
     public function ocvc_permalink_notice_callback($message)
     {
-        $message = __('A custom URL or permalink structure is required for the Performance Cache plugin to work correctly. Please go to the <a href="options-permalink.php">Permalinks Options Page</a> to configure them.', 'vcaching');
+        $message = __('A custom URL or permalink structure is required for the Performance Cache plugin to work correctly. Please go to the <a href="options-permalink.php">Permalinks Options Page</a> to configure them.', 'proisp-vcache');
         return '<div class="notice notice-warning"><p>' . $message . '</p></div>';
     }
 
@@ -562,7 +551,7 @@ final class OCVCaching extends VCachingOC
     public function remove_toolbar_node($wp_admin_bar)
     {
         // replace 'updraft_admin_node' with your node id
-        $wp_admin_bar->remove_node('purge-all-varnish-cache');
+        $wp_admin_bar->remove_node('proisp_purge-all-varnish-cache');
     }
 
     /**
@@ -593,7 +582,7 @@ final class OCVCaching extends VCachingOC
      * @param array $array // array of urls
      * @param number $post_id //POST ID
      */
-    public function vcaching_purge_urls_callback($array, $post_id)
+    public function proisp_vcaching_purge_urls_callback($array, $post_id)
     {
         $url = get_permalink($post_id);
         array_unshift($array, $url);
@@ -601,18 +590,19 @@ final class OCVCaching extends VCachingOC
     }
 
     /**
-     * Function vcaching_events_cb
+     * Function proisp_vcaching_events_cb
      * Callback function for vcaching_events WP filter
      * This function checks if the registered events are to be returned, judging from request payload.
      * e.g. the events are nulled for request actions like "heartbeat" and  "ocdi_import_demo_data"
      * @param $events , an array of events on which caching is hooked.
      * @return array
      */
-    function vcaching_events_cb($events)
+    function proisp_vcaching_events_cb($events)
     {
 
-        $no_post_action = !isset($_REQUEST['action']);
-        $action_not_watched = isset($_REQUEST['action']) && ($_REQUEST['action'] === 'ocdi_import_demo_data' || $_REQUEST['action'] === 'heartbeat');
+        $request_action = isset($_REQUEST['action']) ? sanitize_text_field($_REQUEST['action']) : false;
+        $no_post_action = !$request_action;
+        $action_not_watched = isset($request_action) && ($request_action === 'ocdi_import_demo_data' || $request_action === 'heartbeat');
 
         if ($no_post_action || $action_not_watched) {
             return [];
@@ -628,7 +618,7 @@ final class OCVCaching extends VCachingOC
      * @param $urls , an array of urls that were originally to be purged.
      * @return array
      */
-    function vcaching_purge_urls_cb($urls)
+    function proisp_vcaching_purge_urls_cb($urls)
     {
         $site_url = trailingslashit(get_site_url());
         $purgeUrl = $site_url . '.*';
@@ -645,10 +635,13 @@ final class OCVCaching extends VCachingOC
      */
     public function oc_set_vc_state_cb()
     {
-        if (!isset($_POST['oc_csrf']) && !wp_verify_nonce('one_vcache_nonce')) {
+        $oc_csrf = isset($_POST['oc_csrf']) ? sanitize_text_field($_POST['oc_csrf']) : false;
+        $vc_state = isset($_POST['vc_state']) ? sanitize_text_field($_POST['vc_state']) : false;
+
+        if (!$oc_csrf && !wp_verify_nonce('one_vcache_nonce')) {
             return false;
         }
-        $state = intval($_POST['vc_state']) === 0 ? "false" : "true";
+        $state = intval($vc_state) === 0 ? "false" : "true";
 
         // check eligibility if Performance Cache is being enabled. If it is being disabled, allow to continue
         if ($state == "true") {
@@ -667,12 +660,12 @@ final class OCVCaching extends VCachingOC
         if ($result_ttl && $result_status) {
             $response = [
                 'status' => 'success',
-                'message' => __('Performance cache settings updated', 'vcaching')
+                'message' => __('Performance cache settings updated', 'proisp-vcache')
             ];
         } else {
             $response = [
                 'status' => 'error',
-                'message' => __('Something went wrong!', 'vcaching')
+                'message' => __('Something went wrong!', 'proisp-vcache')
             ];
         }
         wp_send_json($response);
@@ -680,16 +673,19 @@ final class OCVCaching extends VCachingOC
 
     public function oc_set_vc_ttl_cb($echo)
     {
+        $oc_csrf = isset($_POST['oc_csrf']) ? sanitize_text_field($_POST['oc_csrf']) : false;
+        $vc_ttl = isset($_POST['vc_ttl']) ? sanitize_text_field($_POST['vc_ttl']) : false;
+        $vc_ttl_unit = isset($_POST['vc_ttl_unit']) ? sanitize_text_field($_POST['vc_ttl_unit']) : false;
 
-        if (wp_doing_ajax() && !isset($_POST['oc_csrf']) && !wp_verify_nonce('one_vcache_nonce')) {
+        if (wp_doing_ajax() && !$oc_csrf && !wp_verify_nonce('one_vcache_nonce')) {
             return false;
         }
         if ($echo === '') {
             $echo = true;
         }
-        $ttl_value = intval(trim($_POST['vc_ttl']));
+        $ttl_value = intval(trim($vc_ttl));
         $ttl = $ttl_value === 0 ? 2592000 : $ttl_value;
-        $ttl_unit = trim($_POST['vc_ttl_unit']);
+        $ttl_unit = trim($vc_ttl_unit);
         $ttl_unit = empty($ttl_unit) ? 'days' : $ttl_unit;
 
         // Convert into seconds except default value
@@ -701,23 +697,23 @@ final class OCVCaching extends VCachingOC
             $ttl = $ttl * 86400;
         }
 
-        if ((get_site_option('varnish_caching_ttl') == $ttl) && (get_site_option('varnish_caching_homepage_ttl') == $ttl) && (get_site_option('varnish_caching_ttl_unit') == $ttl_unit)) {
+        if ((get_site_option('proisp_varnish_caching_ttl') == $ttl) && (get_site_option('proisp_varnish_caching_homepage_ttl') == $ttl) && (get_site_option('proisp_varnish_caching_ttl_unit') == $ttl_unit)) {
             $result = true;
         } else {
-            $result = update_site_option('varnish_caching_ttl', $ttl);
-            update_site_option('varnish_caching_homepage_ttl', $ttl);
-            update_site_option('varnish_caching_ttl_unit', $ttl_unit);
+            $result = update_site_option('proisp_varnish_caching_ttl', $ttl);
+            update_site_option('proisp_varnish_caching_homepage_ttl', $ttl);
+            update_site_option('proisp_varnish_caching_ttl_unit', $ttl_unit);
         }
         $response = [];
         if ($result) {
             $response = [
                 'status' => 'success',
-                'message' => __('TTL updated', 'vcaching')
+                'message' => __('TTL updated', 'proisp-vcache')
             ];
         } else {
             $response = [
                 'status' => 'error',
-                'message' => __('Something went wrong!', 'vcaching')
+                'message' => __('Something went wrong!', 'proisp-vcache')
             ];
         }
         if ($echo) {
@@ -740,7 +736,7 @@ final class OCVCaching extends VCachingOC
         $protocols = [self::HTTPS, self::HTTP, "/"];
         $domain_name = str_replace($protocols, "", $url);
 
-        $directories = 'wp-content';
+        $directories = wp_basename(WP_CONTENT_DIR);
         $pattern = "/(?:https:\/\/$domain_name\/$directories)(\S*\.[0-9a-z]+)\b/m";
         $updated_html = preg_replace_callback($pattern, [$this, 'rewrite_asset_url'], $html);
         return $updated_html;
@@ -761,7 +757,9 @@ final class OCVCaching extends VCachingOC
          * To maintain consistency, write conditions in a way that if they yield positive value,
          * the url should not be modified
          */
-        $preview_condition = (is_admin_bar_showing() && array_key_exists('preview', $_GET) && $_GET['preview'] == 'true');
+        $get_preview = isset($_GET['preview']) ? sanitize_text_field($_GET['preview']) : false;
+
+        $preview_condition = (is_admin_bar_showing() && array_key_exists('preview', $_GET) && $get_preview == 'true');
         $path_condition = (strpos($asset[0], 'wp-content') === false);
         //skip cdn rewrite in yoast-schema-graph
         $skip_yoast_path = (strpos($asset[0], 'contentUrl') !== false);
@@ -821,7 +819,8 @@ final class OCVCaching extends VCachingOC
          *  Append query paramter to purge CDN files
          *  * rawurlencode() to handle CDN Purge with Brizy builder URLs
          */
-        if ($this->purge_id && strpos($final_url, 'wp-content/uploads/brizy/')) {
+        $brizy_path = wp_basename(WP_CONTENT_DIR) . DIRECTORY_SEPARATOR . 'uploads/brizy/';
+        if ($this->purge_id && strpos($final_url, $brizy_path)) {
             // raw_url_encode with add_query_arg if used in other cases will return unexpected results such as /?ver?media
             $new_url = add_query_arg('media', $this->purge_id, rawurlencode($final_url));
 
@@ -862,7 +861,7 @@ final class OCVCaching extends VCachingOC
     {
 
         // exit if this plugin is not being upgraded
-        if ($options && isset($options['pugins']) && !in_array('onecom-vcache/vcaching.php', $options['plugins'])) {
+        if ($options && isset($options['pugins']) && !in_array('proisp-vcache/vcaching.php', $options['plugins'])) {
             return;
         }
 
@@ -886,11 +885,11 @@ final class OCVCaching extends VCachingOC
         }
 
         //set TTL for varnish caching, default for 1 month in seconds
-        if (get_site_option('varnish_caching_ttl') == '') {
-            update_site_option('varnish_caching_ttl', '2592000');
+        if (get_site_option('proisp_varnish_caching_ttl') == '') {
+            update_site_option('proisp_varnish_caching_ttl', '2592000');
         }
-        if (get_site_option('varnish_caching_homepage_ttl') == '') {
-            update_site_option('varnish_caching_homepage_ttl', '2592000');
+        if (get_site_option('proisp_varnish_caching_homepage_ttl') == '') {
+            update_site_option('proisp_varnish_caching_homepage_ttl', '2592000');
         }
 
     }
@@ -963,4 +962,4 @@ final class OCVCaching extends VCachingOC
     }
 }
 
-$OCVCaching = new OCVCaching();
+$PROISP_VCaching_Config = new PROISP_VCaching_Config();

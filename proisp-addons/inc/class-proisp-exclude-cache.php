@@ -1,5 +1,5 @@
 <?php
-class OnecomExcludeCache
+class PROISP_Exclude_Cache
 {
     public function __construct()
     {
@@ -16,7 +16,7 @@ class OnecomExcludeCache
     {
         add_meta_box(
             'exclude-vcache',
-            esc_html__('Exclude from Performance cache', 'vcaching'),
+            esc_html__('Exclude from Performance cache', 'proisp-vcache'),
             [$this, 'exclude_from_cache_metabox'],
             ['post', 'page'],
             'side',
@@ -45,7 +45,7 @@ class OnecomExcludeCache
                    value="<?php echo esc_attr( $excluded_from_cache ); ?>>" <?php if (isset ($excluded_from_cache)) {
                 checked($excluded_from_cache, true);
             } ?> />
-            <?php esc_html_e('Exclude', 'vcaching'); ?>
+            <?php esc_html_e('Exclude', 'proisp-vcache'); ?>
         </label>
         </p><?php
     }
@@ -59,15 +59,17 @@ class OnecomExcludeCache
      */
     function oct_save_exclude_cache($post_id, $post)
     {
-// replace url to be purged with a better approach
+        $oct_exclude_from_cache = sanitize_text_field($_POST['oct-exclude-from-cache']);
+        $oc_exclude_from_cache  = sanitize_text_field($_POST['oc-exclude-from-cache']);
+        // replace url to be purged with a better approach
         $response = wp_remote_request(get_site_url() . '?p=' . $post_id, ['method' => 'PURGE']);
 
-        if (!isset($_POST['oct-exclude-from-cache']) || !wp_verify_nonce($_POST['oct-exclude-from-cache'], basename(__FILE__))) {
+        if (!isset($oct_exclude_from_cache) || !wp_verify_nonce($oct_exclude_from_cache, basename(__FILE__))) {
             return $post_id;
         }
 
 
-        if (isset($_POST['oc-exclude-from-cache'])) {
+        if (isset($oc_exclude_from_cache)) {
             update_post_meta($post_id, '_oct_exclude_from_cache', true);
         } else {
             update_post_meta($post_id, '_oct_exclude_from_cache', false);

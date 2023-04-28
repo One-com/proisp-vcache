@@ -11,10 +11,10 @@ if (!defined('WP_CLI')){
 /**
  * Purges Varnish Cache
  */
-class WP_CLI_VCaching_Purge_Command extends WP_CLI_Command {
+class WP_CLI_PROISP_VCaching_Purge_Command extends WP_CLI_Command {
 
     public function __construct() {
-        $this->vcaching = new VCachingOC();
+        $this->vcaching = new PROISP_VCaching();
     }
 
     /**
@@ -32,4 +32,4 @@ class WP_CLI_VCaching_Purge_Command extends WP_CLI_Command {
     }
 }
 
-WP_CLI::add_command('ocvcaching', 'WP_CLI_VCaching_Purge_Command');
+WP_CLI::add_command('ocvcaching', 'WP_CLI_PROISP_VCaching_Purge_Command');
