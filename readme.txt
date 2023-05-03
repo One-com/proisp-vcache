@@ -2,7 +2,7 @@
 Contributors: group.one
 Tags: group.one, performance cache, performance cache proisp, proisp-vcache
 Requires at least: 5.6
-Requires PHP: 7.2
+Requires PHP: 8.1
 Tested up to: 6.1.1
 Stable tag: 1.0.0
 License: GPL v2 or later
