@@ -259,7 +259,8 @@ final class PROISP_VCaching_Config extends PROISP_VCaching
         }
 
         // Deactivate the old varnish caching plugin on user's consent.
-        if (isset($_REQUEST['disable-old-varnish']) && $_REQUEST['disable-old-varnish'] == 1) {
+        $disableOldVarnish = isset($_REQUEST['disable-old-varnish']) ? sanitize_text_field($_REQUEST['disable-old-varnish']) : '';
+        if ($disableOldVarnish && $disableOldVarnish == 1) {
             deactivate_plugins('/vcaching/vcaching.php');
             self::runAdminSettings();
             add_action('admin_bar_menu', array($this, 'remove_toolbar_node'), 999);
@@ -335,7 +336,7 @@ final class PROISP_VCaching_Config extends PROISP_VCaching
             register_setting(self::defaultPrefix . 'oc_options', self::defaultPrefix . "enable");
             register_setting(self::defaultPrefix . 'oc_options', self::defaultPrefix . "ttl");
 
-            $ttl = $_POST[self::defaultPrefix . 'ttl'];
+            $ttl = isset($_POST[self::defaultPrefix . 'ttl']) ? sanitize_text_field($_POST[self::defaultPrefix . 'ttl']) : 0;
             $is_update = update_option(self::defaultPrefix . "homepage_ttl", $ttl); //overriding homepage TTL
         }
     }
@@ -400,10 +401,12 @@ final class PROISP_VCaching_Config extends PROISP_VCaching
 
         $purgeme = $schema . $ip . $path . $pregex;
 
+        $host = isset($_SERVER['SERVER_NAME']) ? sanitize_text_field($_SERVER['SERVER_NAME']) : '';
+
         $headers = array(
-            'host' => $_SERVER['SERVER_NAME'],
+            'host' => $host,
             'X-VC-Purge-Method' => $purgemethod,
-            'X-VC-Purge-Host' => $_SERVER['SERVER_NAME']
+            'X-VC-Purge-Host' => $host
         );
         $response = wp_remote_request(
             $purgeme,
@@ -462,7 +465,8 @@ final class PROISP_VCaching_Config extends PROISP_VCaching
      */
     public function oc_vc_notice()
     {
-        if (empty($this->messages) && empty($_SESSION['ocvcaching_purge_note'])) {
+        $ocvcaching_purge_note = isset($_SESSION['ocvcaching_purge_note']) ? sanitize_text_field($_SESSION['ocvcaching_purge_note']) : "";
+        if (empty($this->messages) && empty($ocvcaching_purge_note)) {
             return;
         }
         ?>
@@ -475,19 +479,18 @@ final class PROISP_VCaching_Config extends PROISP_VCaching
                             break;
                         }
                         ?>
-                        <li><?php echo $message; ?></li>
+                        <li><?php echo esc_html($message); ?></li>
                         <?php
                     }
-                } elseif (!empty($_SESSION['ocvcaching_purge_note'])) {
-                    foreach ($_SESSION['ocvcaching_purge_note'] as $key => $message) {
+                } elseif (!empty($ocvcaching_purge_note)) {
+                    foreach ($ocvcaching_purge_note as $key => $message) {
                         if ($key > 0) {
                             break;
                         }
                         ?>
-                        <li><?php echo $message; ?></li>
+                        <li><?php echo esc_html($message); ?></li>
                         <?php
                     }
-
                 }
                 ?>
             </ul>
@@ -529,8 +532,10 @@ final class PROISP_VCaching_Config extends PROISP_VCaching
         } else {
             $purgemethod = 'exact';
         }
-        $headers['X-VC-Purge-Host'] = sanitize_text_field($_SERVER['SERVER_NAME']);
-        $headers['host'] = sanitize_text_field($_SERVER['SERVER_NAME']);
+        $host = isset($_SERVER['SERVER_NAME']) ? sanitize_text_field($_SERVER['SERVER_NAME']) : '';
+
+        $headers['host'] = $host;
+        $headers['X-VC-Purge-Host'] = $host;
         $headers['X-VC-Purge-Method'] = $purgemethod;
         return $headers;
     }
@@ -602,7 +607,7 @@ final class PROISP_VCaching_Config extends PROISP_VCaching
 
         $request_action = isset($_REQUEST['action']) ? sanitize_text_field($_REQUEST['action']) : false;
         $no_post_action = !$request_action;
-        $action_not_watched = isset($request_action) && ($request_action === 'ocdi_import_demo_data' || $request_action === 'heartbeat');
+        $action_not_watched = ($request_action === 'ocdi_import_demo_data' || $request_action === 'heartbeat');
 
         if ($no_post_action || $action_not_watched) {
             return [];

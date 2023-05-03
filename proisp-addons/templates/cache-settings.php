@@ -56,7 +56,7 @@ $oc_nonce = wp_create_nonce('one_vcache_nonce');
                         <label for="pc_enable" class="oc-label">
                             <span class="oc_cb_switch">
                                 <input type="checkbox" id="pc_enable" data-target="pc_enable_settings" name="show"
-                                       value=1 <?php echo $pc_checked; ?> />
+                                       value=1 <?php echo esc_attr($pc_checked); ?> />
                                 <span class="oc_cb_slider" data-target="oc-performance-icon"
                                       data-target-input="pc_enable"></span>
                             </span><?php echo __("Enable Performance Cache", 'proisp-vcache'); ?>

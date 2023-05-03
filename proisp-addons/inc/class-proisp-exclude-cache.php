@@ -59,17 +59,17 @@ class PROISP_Exclude_Cache
      */
     function oct_save_exclude_cache($post_id, $post)
     {
-        $oct_exclude_from_cache = sanitize_text_field($_POST['oct-exclude-from-cache']);
-        $oc_exclude_from_cache  = sanitize_text_field($_POST['oc-exclude-from-cache']);
+        $oct_exclude_from_cache = isset($_POST['oct-exclude-from-cache']) ? sanitize_text_field($_POST['oct-exclude-from-cache']) : false;
+        $oc_exclude_from_cache  = isset($_POST['oc-exclude-from-cache']) ? sanitize_text_field($_POST['oc-exclude-from-cache']) : false;
         // replace url to be purged with a better approach
         $response = wp_remote_request(get_site_url() . '?p=' . $post_id, ['method' => 'PURGE']);
 
-        if (!isset($oct_exclude_from_cache) || !wp_verify_nonce($oct_exclude_from_cache, basename(__FILE__))) {
+        if (!$oct_exclude_from_cache || !wp_verify_nonce($oct_exclude_from_cache, basename(__FILE__))) {
             return $post_id;
         }
 
 
-        if (isset($oc_exclude_from_cache)) {
+        if ($oc_exclude_from_cache) {
             update_post_meta($post_id, '_oct_exclude_from_cache', true);
         } else {
             update_post_meta($post_id, '_oct_exclude_from_cache', false);

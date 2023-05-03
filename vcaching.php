@@ -13,14 +13,14 @@ This plugin is a modified version of the WordPress plugin "Varnish Caching" by R
 Copyright 2017: Razvan Stanga (email: varnish-caching@razvi.ro)
 */
 
-if (!defined('PROISP_OC_CLUSTER_ID')) {
+if (!defined('PROISP_VCaching_CLUSTER_ID')) {
     $onecom_cluster_id = isset($_SERVER['ONECOM_CLUSTER_ID']) ? sanitize_text_field($_SERVER['ONECOM_CLUSTER_ID']) : '';
-    define('PROISP_OC_CLUSTER_ID', $onecom_cluster_id);
+    define('PROISP_VCaching_CLUSTER_ID', $onecom_cluster_id);
 }
 
-if (!defined('PROISP_OC_WEBCONFIG_ID')) {
+if (!defined('PROISP_VCaching_WEBCONFIG_ID')) {
     $onecom_webconfig_id = isset($_SERVER['ONECOM_CLUSTER_ID']) ? sanitize_text_field($_SERVER['ONECOM_WEBCONFIG_ID']) : '';
-    define('PROISP_OC_WEBCONFIG_ID', $onecom_webconfig_id);
+    define('PROISP_VCaching_WEBCONFIG_ID', $onecom_webconfig_id);
 }
 
 
@@ -301,12 +301,14 @@ class PROISP_VCaching
         $varnishHost = explode(',', $this->varnishHost);
         $varnishHost = apply_filters('vcaching_varnish_hosts', $varnishHost);
         $statsJsons = explode(',', $this->statsJsons);
+        $httpHost = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field($_SERVER['HTTP_HOST']) : '';
+
 
         foreach ($varnishIp as $key => $ip) {
             $this->ipsToHosts[] = array(
                 'ip' => $ip,
-                'host' => $this->dynamicHost ? $_SERVER['HTTP_HOST'] : $varnishHost[$key],
-                'statsJson' => isset($statsJsons[$key]) ? $statsJsons[$key] : null
+                'host' => $this->dynamicHost ? $httpHost : $varnishHost[$key],
+                'statsJson' => isset($statsJsons[$key]) ? sanitize_text_field($statsJsons[$key]) : null
             );
         }
     }
@@ -337,9 +339,9 @@ class PROISP_VCaching
         foreach ($this->customFields as $customField) {
             if (current_user_can($customField['capability'], $post_id)) {
 
-                $custom_field_name = isset($_POST[$this->prefix . $customField['name']]) ? sanitize_text_field($_POST[$this->prefix . $customField['name']]) : false;
+                $custom_field_name = isset($_POST[$this->prefix . $customField['name']]) ? sanitize_text_field($_POST[$this->prefix . $customField['name']]) : '';
 
-                if ($custom_field_name && trim($custom_field_name) != '') {
+                if (trim($custom_field_name) != '') {
                     update_post_meta($post_id, $this->prefix . $customField['name'], $custom_field_name);
                 } else {
                     delete_post_meta($post_id, $this->prefix . $customField['name']);
@@ -429,10 +431,6 @@ class PROISP_VCaching
     public function purge_post_page()
     {
         return;
-        /*if (isset($_SESSION['vcaching_note'])) {
-            echo '<div id="message" class="updated fade"><p><strong>' . __('Performance Cache', 'proisp-vcache') . '</strong><br /><br />' . $_SESSION['vcaching_note'] . '</p></div>';
-            unset ($_SESSION['vcaching_note']);
-        }*/
     }
 
     public function pretty_permalinks_message()
@@ -474,7 +472,7 @@ class PROISP_VCaching
         } else {
             $text = $intro . ' ' . $nopermission;
         }
-        echo '<p class="varnish-glance">' . $text . '</p>';
+        echo '<p class="varnish-glance">' . esc_html($text) . '</p>';
     }
 
     protected function get_register_events()
@@ -523,7 +521,7 @@ class PROISP_VCaching
     public function purge_wp_webroute(): bool
     {
         // exit if not a cluster
-        if (!PROISP_OC_CLUSTER_ID) {
+        if (!PROISP_VCaching_CLUSTER_ID) {
             return false;
         }
 
@@ -744,7 +742,7 @@ class PROISP_VCaching
 
         if (function_exists('is_user_logged_in') && !is_user_logged_in()) {
             $exclude_from_cache = false;
-            $request_uri = sanitize_text_field($_SERVER['REQUEST_URI']);
+            $request_uri = isset($_SERVER['REQUEST_URI']) ? sanitize_text_field($_SERVER['REQUEST_URI']) : "";
 
             if (strpos($request_uri, 'favicon.ico') === false) {
                 $post_id = url_to_postid($request_uri);
@@ -824,9 +822,9 @@ if (defined('WP_CLI') && WP_CLI) {
     include('wp-cli.php');
 }
 
-if (!defined('OC_HTTP_HOST')) {
+if (!defined('PROISP_VCaching_HTTP_HOST')) {
     $host = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field($_SERVER['HTTP_HOST']) : 'localhost';
-    define('OC_HTTP_HOST', $host);
+    define('PROISP_VCaching_HTTP_HOST', $host);
 }
 
 register_uninstall_hook(__FILE__, 'oc_vcache_plugin_uninstall');
