@@ -1,11 +1,11 @@
 <?php
 
-if (!defined('ABSPATH')) {
-    die();
+if ( ! defined( 'ABSPATH' ) ) {
+	die();
 }
 
-if (!defined('WP_CLI')){
-    return;
+if ( ! defined( 'WP_CLI' ) ) {
+	return;
 }
 
 /**
@@ -13,23 +13,22 @@ if (!defined('WP_CLI')){
  */
 class WP_CLI_PROISP_VCaching_Purge_Command extends WP_CLI_Command {
 
-    public function __construct() {
-        $this->vcaching = new PROISP_VCaching();
-    }
+	public function __construct() {
+		$this->vcaching = new PROISP_VCaching();
+	}
 
-    /**
-     * Forces a Varnish Purge
-     *
-     * ## wp cli command for purging cache
-     *
-     *     wp ocvcaching purge
-     *
-     */
-    public function purge() {
-        wp_create_nonce('vcaching-purge-cli');
-        $this->vcaching->purge_url(home_url() .'/?vc-regex');
-        WP_CLI::success('ALL Varnish cache was purged.');
-    }
+	/**
+	 * Forces a Varnish Purge
+	 *
+	 * ## wp cli command for purging cache
+	 *
+	 *     wp ocvcaching purge
+	 */
+	public function purge() {
+		wp_create_nonce( 'vcaching-purge-cli' );
+		$this->vcaching->purge_url( home_url() . '/?vc-regex' );
+		WP_CLI::success( 'ALL Varnish cache was purged.' );
+	}
 }
 
-WP_CLI::add_command('ocvcaching', 'WP_CLI_PROISP_VCaching_Purge_Command');
+WP_CLI::add_command( 'ocvcaching', 'WP_CLI_PROISP_VCaching_Purge_Command' );

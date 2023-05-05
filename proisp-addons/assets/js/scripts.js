@@ -56,7 +56,7 @@ function ocSetVCState() {
     let vc_ttl_unit = jQuery('#oc_vcache_ttl_unit').val() || 'days';
     let ocCsrfToken = jQuery('input[name="octracking"]').val();
     jQuery.post(ajaxurl, {
-        action: 'oc_set_vc_state',
+        action: 'proisp_oc_set_vc_state',
         vc_state: vc_state,
         vc_ttl: vc_ttl,
         vc_ttl_unit: vc_ttl_unit,
